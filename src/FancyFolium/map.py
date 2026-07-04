@@ -118,6 +118,25 @@ def merge_maps(
         for child in mi._children.values():
             child.add_to(base)
 
+    # Only base's own control-panel script (added by create_map/_rebuild_control_panel)
+    # ends up in the saved HTML — every other map's `get_root().html` children (its
+    # legend div + the script populating window._MAPLIB_LEGENDS[its mapId]) are
+    # discarded since only `base` is rendered. Re-inject those legends here so the
+    # switcher has something to look up when it points at a non-base city.
+    legends_by_map = {
+        mi.get_name(): _state(mi).get("legends", {})
+        for mi in maps[1:]
+    }
+    legends_script = f"""
+<script>
+window._MAPLIB_LEGENDS = window._MAPLIB_LEGENDS || {{}};
+Object.assign(window._MAPLIB_LEGENDS, {json.dumps(legends_by_map)});
+</script>
+"""
+    base.get_root().html.add_child(
+        folium.Element(legends_script), name="maplib_merged_legends"
+    )
+
     opts_html = "\n".join(
         f'<option value="{d["mapId"]}">{d["name"]}</option>'
         for d in map_data
@@ -164,43 +183,45 @@ def merge_maps(
 def export(
     m: folium.Map,
     path: str,
-    raster_path: Optional[str] = None,
+    raster_path: str = "rasters",
 ) -> None:
-    """Export a map as a self-contained HTML file.
+    """Export a map as an HTML file with raster overlays as sibling files.
+
+    Base64-embedded raster images are always extracted to
+    ``{html_dir}/{raster_path}/`` as individual PNG files, and the HTML is
+    rewritten to reference them via relative paths instead of embedding them
+    inline — this keeps the HTML file itself small even when a map has many
+    or large raster overlays.
 
     Args:
         m: The map to export.
         path: Destination HTML file path. Parent directories are created
             if needed.
-        raster_path: If given, base64-embedded raster images are extracted
-            to ``{html_dir}/{raster_path}/`` as individual PNG files, and
-            the HTML is rewritten to reference them via relative paths
-            instead of embedding them inline. Useful for keeping the HTML
-            file small when a map has many/large raster overlays.
+        raster_path: Subdirectory (relative to ``path``'s parent) that
+            extracted raster PNGs are written to.
     """
     out_path = Path(path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     m.save(str(out_path))
 
-    if raster_path is not None:
-        raster_dir = out_path.parent / raster_path
-        raster_dir.mkdir(parents=True, exist_ok=True)
+    raster_dir = out_path.parent / raster_path
+    raster_dir.mkdir(parents=True, exist_ok=True)
 
-        html_text = out_path.read_text(encoding="utf-8")
-        pattern   = re.compile(r'src="(data:image/png;base64,([^"]+))"')
-        idx       = 0
+    html_text = out_path.read_text(encoding="utf-8")
+    pattern   = re.compile(r'src="(data:image/png;base64,([^"]+))"')
+    idx       = 0
 
-        def _replacer(match: "re.Match") -> str:
-            """Write one embedded base64 PNG to disk and return its relative src=."""
-            nonlocal idx
-            import base64 as _b64
-            fname = f"raster_{idx:04d}.png"
-            (raster_dir / fname).write_bytes(_b64.b64decode(match.group(2)))
-            idx += 1
-            return f'src="{Path(raster_path) / fname}"'
+    def _replacer(match: "re.Match") -> str:
+        """Write one embedded base64 PNG to disk and return its relative src=."""
+        nonlocal idx
+        import base64 as _b64
+        fname = f"raster_{idx:04d}.png"
+        (raster_dir / fname).write_bytes(_b64.b64decode(match.group(2)))
+        idx += 1
+        return f'src="{Path(raster_path) / fname}"'
 
-        out_path.write_text(pattern.sub(_replacer, html_text), encoding="utf-8")
-        if idx:
-            print(f"  Extracted {idx} raster(s) → '{raster_dir}'")
+    out_path.write_text(pattern.sub(_replacer, html_text), encoding="utf-8")
+    if idx:
+        print(f"  Extracted {idx} raster(s) → '{raster_dir}'")
 
     print(f"✓ Map saved → {out_path}")
