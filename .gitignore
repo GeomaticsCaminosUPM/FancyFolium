@@ -1,0 +1,51 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*$py.class
+build/
+dist/
+wheels/
+*.egg-info/
+*.egg-info
+*.whl
+
+# Virtual environments
+.venv
+.claude
+venv/
+env/
+ENV/
+
+# Packaging / publishing
+.pypirc
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Documentation build output
+docs/_build/
+docs/site/
+site/
+
+todo.txt
+publish_package.md
+
+# Example outputs
+examples/output/
+examples/map.html

@@ -1,0 +1,242 @@
+/* ============================================================
+   map_controls.css  —  FancyFolium
+   ============================================================ */
+
+/* ── Panel container ─────────────────────────────────────── */
+.maplib-panel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid #c8c8c8;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+  width: 220px;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ── Tab row ─────────────────────────────────────────────── */
+.maplib-tabs {
+  display: flex;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+}
+.maplib-tab {
+  flex: 1;
+  padding: 7px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: #666;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  border-radius: 0;
+}
+.maplib-tab:first-child { border-radius: 9px 0 0 0; }
+.maplib-tab:last-child  { border-radius: 0 9px 0 0; }
+.maplib-tab:hover       { background: #e0e8f4; color: #2a5aab; }
+.maplib-tab.active      { background: #fff; color: #1e4fa0; border-bottom: 2px solid #1e4fa0; }
+
+/* ── Panel body ──────────────────────────────────────────── */
+.maplib-panel-body {
+  display: none;
+  padding: 8px 10px 10px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.maplib-panel-body.active { display: block; }
+.maplib-panel-body::-webkit-scrollbar       { width: 5px; }
+.maplib-panel-body::-webkit-scrollbar-track { background: #f5f5f5; }
+.maplib-panel-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+/* ── Dropdown section ─────────────────────────────────────── */
+.maplib-dropdown-wrap  { margin-bottom: 4px; }
+.maplib-dropdown-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 4px; }
+.maplib-dropdown-wrap select {
+  width: 100%; font-size: 12px; padding: 4px 6px;
+  border: 1px solid #bbb; border-radius: 5px;
+  background: #fafafa; color: #333; cursor: pointer; outline: none; transition: border-color .15s;
+}
+.maplib-dropdown-wrap select:focus { border-color: #1e4fa0; background: #fff; }
+
+/* ── Separator ───────────────────────────────────────────── */
+.maplib-sep { border: none; border-top: 1px solid #e8e8e8; margin: 6px 0; }
+
+/* ── Checkboxes ──────────────────────────────────────────── */
+.maplib-checks { display: flex; flex-direction: column; gap: 3px; }
+.maplib-check-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 4px; border-radius: 5px; cursor: pointer; transition: background .12s;
+}
+.maplib-check-row:hover { background: #eef3fb; }
+.maplib-check-row input[type="checkbox"] { width: 14px; height: 14px; accent-color: #1e4fa0; cursor: pointer; flex-shrink: 0; }
+.maplib-check-row span { font-size: 12px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; }
+
+/* ── Per-layer opacity control ───────────────────────────── */
+.maplib-opacity-btn {
+  flex-shrink: 0; width: 18px; height: 18px; border: none; background: transparent;
+  cursor: pointer; font-size: 12px; line-height: 18px; text-align: center;
+  border-radius: 4px; color: #888; padding: 0;
+}
+.maplib-opacity-btn:hover { background: #dde8fa; color: #1e4fa0; }
+.maplib-opacity-row {
+  display: none; align-items: center; gap: 6px; padding: 2px 12px 6px 22px; box-sizing: border-box;
+}
+.maplib-opacity-row.open { display: flex; }
+.maplib-opacity-row input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: #1e4fa0; height: 12px; }
+.maplib-opacity-row .maplib-opacity-val { font-size: 10px; color: #666; width: 34px; text-align: right; flex-shrink: 0; }
+.maplib-dropdown-opacity-row {
+  display: flex; align-items: center; gap: 6px; margin-top: 4px; padding-right: 6px; box-sizing: border-box;
+}
+.maplib-dropdown-opacity-row input[type="range"] { flex: 1 1 auto; min-width: 0; }
+.maplib-dropdown-opacity-row .maplib-opacity-val { width: 34px; text-align: right; flex-shrink: 0; }
+
+/* ── Map switcher ────────────────────────────────────────── */
+.maplib-switcher {
+  position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 9998; background: #fff; border: 1px solid #c8c8c8;
+  border-radius: 8px; box-shadow: 0 3px 12px rgba(0,0,0,.15);
+  padding: 8px 14px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; min-width: 180px;
+}
+
+/* ── Legend panel ─────────────────────────────────────────── */
+.maplib-legend-container {
+  position: fixed; bottom: 30px; right: 10px; z-index: 9998;
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+}
+.maplib-legend-box {
+  background: rgba(255,255,255,.95); border: 1px solid #c8c8c8; border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12); padding: 8px 12px 10px;
+  font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px;
+  min-width: 160px; max-width: 220px; pointer-events: auto;
+}
+.maplib-legend-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #555; margin-bottom: 6px; }
+.maplib-legend-grad  { height: 12px; border-radius: 3px; margin-bottom: 4px; }
+.maplib-legend-labels { display: flex; justify-content: space-between; color: #444; font-size: 10px; }
+.maplib-legend-swatch-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; color: #333; }
+.maplib-legend-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.maplib-legend-marker-icon { display: inline-block; width: 16px; text-align: center; flex-shrink: 0; font-size: 13px; line-height: 1; }
+
+/* ── Histogram toggle buttons (used in the stats panel header) ───────── */
+.maplib-hist-toggle-btn {
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  border: 1px solid #bbb; background: #f4f4f4; color: #555; cursor: pointer;
+  line-height: 1.4;
+}
+.maplib-hist-toggle-btn.active { background: #3b6fd8; border-color: #3b6fd8; color: #fff; }
+
+/* ── Scale bar — top-left after zoom ─────────────────────── */
+.leaflet-top.leaflet-left .leaflet-control-scale {
+  margin-top: 8px;
+  margin-left: 10px;
+  clear: both;
+}
+
+/* ── Stats panel toggle button ────────────────────────────── */
+.maplib-stats-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 10px;
+  z-index: 9999;
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #c8c8c8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background .15s, box-shadow .15s;
+  user-select: none;
+}
+.maplib-stats-btn:hover { background: #eef3fb; box-shadow: 0 4px 12px rgba(0,0,0,.22); }
+
+/* ── Stats panel ─────────────────────────────────────────── */
+.maplib-stats-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 10px;
+  z-index: 9998;
+  width: 40vw;
+  height: 40vh;
+  min-width: 320px;
+  min-height: 260px;
+  background: #fff;
+  border: 1px solid #c8c8c8;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.2);
+  display: none;
+  flex-direction: column;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+}
+.maplib-stats-panel.open { display: flex; }
+
+.maplib-stats-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.maplib-stats-header label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+.maplib-stats-header select {
+  font-size: 12px; padding: 3px 7px; border: 1px solid #bbb; border-radius: 5px;
+  background: #fafafa; color: #333; outline: none; cursor: pointer; max-width: 160px;
+}
+.maplib-stats-header select:focus { border-color: #1e4fa0; }
+.maplib-stats-pins-wrap { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.maplib-stats-pins-wrap label { font-size: 11px; color: #888; white-space: nowrap; }
+.maplib-stats-pins-wrap input[type=number] {
+  width: 46px; font-size: 12px; padding: 3px 5px;
+  border: 1px solid #bbb; border-radius: 5px; outline: none; text-align: center;
+}
+.maplib-stats-toggles { display: flex; gap: 4px; }
+.maplib-stats-close {
+  margin-left: 6px; background: none; border: none; font-size: 16px;
+  cursor: pointer; color: #aaa; padding: 0 2px; line-height: 1; flex-shrink: 0;
+}
+.maplib-stats-close:hover { color: #333; }
+
+.maplib-stats-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  padding: 12px 16px 10px;
+}
+.maplib-stats-empty {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: #bbb; font-size: 13px; font-style: italic;
+}
+.maplib-stats-canvas-wrap {
+  width: 100%; height: 100%; position: relative;
+}
+.maplib-stats-canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.maplib-stats-summary {
+  position: absolute;
+  top: 10px; right: 16px;
+  background: rgba(255,255,255,.9);
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: #444;
+  line-height: 1.7;
+  pointer-events: none;
+}
+.maplib-stats-summary b { color: #1e4fa0; }

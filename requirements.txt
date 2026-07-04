@@ -1,0 +1,19 @@
+# Core runtime dependencies (mirrors [project.dependencies] in pyproject.toml).
+folium>=0.20.0
+geopandas>=1.0.1
+shapely>=2.0.7
+pandas>=2.3.3
+numpy>=2.0.2
+pillow>=10.0.0
+
+# Raster support (raster_layer / vector_to_raster). Every rasterio import in
+# the package is lazy, so this is only needed if you use those features.
+rasterio>=1.4.3
+
+# Used by examples/example.ipynb only.
+ipykernel>=6.31.0
+matplotlib>=3.9.4
+mapclassify>=2.8.1
+
+# Testing.
+pytest>=8.0.0
