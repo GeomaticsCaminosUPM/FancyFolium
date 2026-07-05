@@ -335,8 +335,14 @@ function _fmt(v) {
 var _maplibStatsChart = null;   // holds the Chart.js instance
 var _maplibStatsPanelOpen = false;
 // Display preferences for the currently-open histogram: pct = count vs.
-// percent-of-total on the y-axis, log = linear vs. logarithmic y-axis scale.
-var _maplibStatsPrefs = { pct: false, log: false };
+// percent-of-total on the y-axis, log = linear vs. logarithmic y-axis scale,
+// mapMode = how to combine data across cities when merge_maps() is in play:
+// 'active' (only the currently-shown city), 'separate' (one thin column per
+// city per bin) or 'combined' (all cities' values summed into one column).
+var _maplibStatsPrefs = { pct: false, log: false, mapMode: 'active' };
+
+// Fixed palette used to color per-city datasets in 'separate' mode.
+var _MAPLIB_CITY_PALETTE = ['#4a90d9', '#e07a3e', '#5ab06b', '#c25b9e', '#d9b64a', '#7a6fd9', '#4ac2c2', '#d94a5f'];
 
 function _initStatsPanel(mapId, data) {
   var vecLayers = data.vecLayers || [];
@@ -406,6 +412,36 @@ function _initStatsPanel(mapId, data) {
   togglesWrap.appendChild(pctBtn);
   togglesWrap.appendChild(logBtn);
 
+  // Map-mode toggle (only relevant when merge_maps() put several cities'
+  // data behind this one panel and the selected layer name is shared).
+  var mapModeWrap = document.createElement('div');
+  mapModeWrap.className = 'maplib-stats-mapmode';
+  mapModeWrap.id = 'maplib-stats-mapmode-' + mapId;
+  mapModeWrap.style.display = 'none';
+  var mapModeSpecs = [
+    ['active',   'This map',  'Show only the currently-active map’s values'],
+    ['separate', 'Split',     'Show one column per map for each bin'],
+    ['combined', 'Sum',       'Sum every map’s values into one column per bin'],
+  ];
+  mapModeSpecs.forEach(function(spec) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'maplib-hist-toggle-btn maplib-mapmode-btn';
+    b.dataset.mode = spec[0];
+    b.title = spec[2];
+    b.textContent = spec[1];
+    b.classList.toggle('active', _maplibStatsPrefs.mapMode === spec[0]);
+    b.addEventListener('click', function() {
+      _maplibStatsPrefs.mapMode = spec[0];
+      mapModeWrap.querySelectorAll('.maplib-mapmode-btn').forEach(function(o) {
+        o.classList.toggle('active', o.dataset.mode === spec[0]);
+      });
+      var live = (window._MAPLIB_DATA || {})[mapId] || data;
+      if (sel.value) _renderHistogram(mapId, live, sel.value, parseInt(pinsInput.value) || 10);
+    });
+    mapModeWrap.appendChild(b);
+  });
+
   var closeBtn = document.createElement('button');
   closeBtn.className = 'maplib-stats-close';
   closeBtn.innerHTML = '✕';
@@ -415,6 +451,7 @@ function _initStatsPanel(mapId, data) {
   header.appendChild(sel);
   header.appendChild(pinsWrap);
   header.appendChild(togglesWrap);
+  header.appendChild(mapModeWrap);
   header.appendChild(closeBtn);
 
   // Body
@@ -522,9 +559,51 @@ function _getLayerColors(mapId, layerName, features) {
   return features.map(function() { return '#4a90d9'; });
 }
 
+/* ── Look up the numeric colormap (gradient stops + vmin/vmax) that was
+   used to color a layer's column, so histogram bins can be colored by
+   value along that same scale instead of by averaging per-feature colors
+   (which drift apart once several maps, each normalized to its own
+   vmin/vmax, are merged together) ── */
+
+function _getNumericLegendSpec(mapId, layerName) {
+  var legends = (window._MAPLIB_LEGENDS || {})[mapId] || {};
+  var specs = legends[layerName];
+  if (!specs) return null;
+  if (!Array.isArray(specs)) specs = [specs];
+  for (var i = 0; i < specs.length; i++) {
+    if (specs[i] && specs[i].type === 'numeric') return specs[i];
+  }
+  return null;
+}
+
+function _hexToRgb(hex) {
+  hex = (hex || '#4a90d9').replace('#', '');
+  if (hex.length !== 6) return { r: 74, g: 144, b: 217 };
+  return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+}
+
+function _colorFromSpec(spec, value) {
+  if (!spec || spec.type !== 'numeric' || !spec.colors || !spec.colors.length) return null;
+  var vmin = spec.vmin, vmax = spec.vmax;
+  var t = (vmax > vmin) ? (value - vmin) / (vmax - vmin) : 0;
+  t = Math.max(0, Math.min(1, t));
+  var stops = spec.colors; // sorted [[t, hex], ...]
+  var lo = stops[0], hi = stops[stops.length - 1];
+  for (var i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i][0] && t <= stops[i + 1][0]) { lo = stops[i]; hi = stops[i + 1]; break; }
+  }
+  var span = hi[0] - lo[0];
+  var f = span > 0 ? (t - lo[0]) / span : 0;
+  var c1 = _hexToRgb(lo[1]), c2 = _hexToRgb(hi[1]);
+  var r = Math.round(c1.r + (c2.r - c1.r) * f);
+  var g = Math.round(c1.g + (c2.g - c1.g) * f);
+  var b = Math.round(c1.b + (c2.b - c1.b) * f);
+  return 'rgba(' + r + ',' + g + ',' + b + ',0.82)';
+}
+
 /* ── Build histogram from numeric values ─────────────────────── */
 
-function _buildNumericHistogram(values, colors, nBins, useLogBins) {
+function _buildNumericHistogram(values, colors, nBins, useLogBins, legendSpec) {
   if (!values.length) return null;
   var mn = Math.min.apply(null, values);
   var mx = Math.max.apply(null, values);
@@ -550,13 +629,28 @@ function _buildNumericHistogram(values, colors, nBins, useLogBins) {
     var lo = edges[i];
     var hi = edges[i + 1];
     bins.push(lo.toPrecision(3) + '–' + hi.toPrecision(3));
+
+    if (legendSpec) {
+      // Color each bin by its own position on the column's colormap, so the
+      // histogram reads consistently with the legend regardless of how many
+      // (possibly differently-normalized, if merged across maps) features
+      // happen to fall into it.
+      var cnt2 = 0;
+      values.forEach(function(v) {
+        if ((i < nBins - 1) ? (v >= lo && v < hi) : (v >= lo && v <= hi)) cnt2++;
+      });
+      counts.push(cnt2);
+      binColors.push(_colorFromSpec(legendSpec, (lo + hi) / 2) || 'rgba(74,144,217,0.82)');
+      continue;
+    }
+
     var cnt = 0;
     var rSum = 0, gSum = 0, bSum = 0, cCnt = 0;
     values.forEach(function(v, idx) {
       var inBin = (i < nBins - 1) ? (v >= lo && v < hi) : (v >= lo && v <= hi);
       if (inBin) {
         cnt++;
-        // parse hex color for averaging
+        // parse hex color for averaging (fallback when no colormap spec is available)
         var hex = (colors[idx] || '#4a90d9').replace('#','');
         if (hex.length === 6) {
           rSum += parseInt(hex.slice(0,2),16);
@@ -599,21 +693,17 @@ function _buildCategoricalHistogram(values, colors, icons) {
   return { labels: labels, counts: counts, colors: cols, icons: iconList };
 }
 
-/* ── Render histogram ─────────────────────────────────────── */
+/* ── Extract the plottable series (values/colors/icons) for one layer
+   name out of a single map's data blob. Shared by active-map rendering
+   and by the cross-map 'separate'/'combined' modes below. ── */
 
-function _renderHistogram(mapId, data, layerName, nBins) {
-  var body = document.getElementById('maplib-stats-body-' + mapId);
-  if (!body) return;
-
-  var vecLayers = data.vecLayers || [];
+function _extractSeries(mapId, md, layerName) {
+  var vecLayers = (md && md.vecLayers) || [];
   var entry = null;
   for (var i = 0; i < vecLayers.length; i++) {
     if (vecLayers[i].name === layerName) { entry = vecLayers[i]; break; }
   }
-  if (!entry) {
-    body.innerHTML = '<div class="maplib-stats-empty">Layer data not available</div>';
-    return;
-  }
+  if (!entry) return null;
 
   var values, colors, icons = null, isNum, groupedByMarker = false;
 
@@ -634,15 +724,9 @@ function _renderHistogram(mapId, data, layerName, nBins) {
       isNum = values.length > 0 && typeof values[0] === 'number';
     }
   } else {
-    if (!entry.js_var) {
-      body.innerHTML = '<div class="maplib-stats-empty">Layer data not available</div>';
-      return;
-    }
+    if (!entry.js_var) return null;
     var features = _extractLayerData(entry.js_var);
-    if (!features || !features.length) {
-      body.innerHTML = '<div class="maplib-stats-empty">No features found</div>';
-      return;
-    }
+    if (!features || !features.length) return null;
     // Use the column this layer was actually built with (matches its legend);
     // fall back to the first non-internal property only if none was recorded.
     var sample = features[0].properties || {};
@@ -658,14 +742,102 @@ function _renderHistogram(mapId, data, layerName, nBins) {
         }
       });
     }
-    if (!colName) {
-      body.innerHTML = '<div class="maplib-stats-empty">No plottable columns found</div>';
-      return;
-    }
+    if (!colName) return null;
     values = features.map(function(f) { return (f.properties || {})[colName]; }).filter(function(v) { return v !== null && v !== undefined; });
     colors = _getLayerColors(mapId, layerName, features);
     isNum  = values.length > 0 && typeof values[0] === 'number';
   }
+
+  if (!values.length) return null;
+  return { values: values, colors: colors, icons: icons, isNum: isNum, groupedByMarker: groupedByMarker };
+}
+
+/* ── Bin numeric values against a fixed set of edges (used to keep bins
+   aligned across maps in 'separate'/'combined' mode) ── */
+
+function _computeEdges(values, nBins, useLogBins) {
+  var mn = Math.min.apply(null, values);
+  var mx = Math.max.apply(null, values);
+  if (mn === mx) { mn -= 0.5; mx += 0.5; }
+  var canLog = useLogBins && mn > 0;
+  var edges = [];
+  if (canLog) {
+    var logMn = Math.log(mn), logMx = Math.log(mx);
+    for (var e = 0; e <= nBins; e++) edges.push(Math.exp(logMn + (e / nBins) * (logMx - logMn)));
+  } else {
+    var step0 = (mx - mn) / nBins;
+    for (var e2 = 0; e2 <= nBins; e2++) edges.push(mn + e2 * step0);
+  }
+  return edges;
+}
+
+function _edgeLabels(edges) {
+  var labels = [];
+  for (var i = 0; i < edges.length - 1; i++) labels.push(edges[i].toPrecision(3) + '–' + edges[i + 1].toPrecision(3));
+  return labels;
+}
+
+function _binNumericWithEdges(values, colors, edges) {
+  var nBins = edges.length - 1;
+  var counts = [], binColors = [];
+  for (var i = 0; i < nBins; i++) {
+    var lo = edges[i], hi = edges[i + 1];
+    var cnt = 0, rSum = 0, gSum = 0, bSum = 0, cCnt = 0;
+    values.forEach(function(v, idx) {
+      var inBin = (i < nBins - 1) ? (v >= lo && v < hi) : (v >= lo && v <= hi);
+      if (inBin) {
+        cnt++;
+        var hex = (colors[idx] || '#4a90d9').replace('#','');
+        if (hex.length === 6) {
+          rSum += parseInt(hex.slice(0,2),16);
+          gSum += parseInt(hex.slice(2,4),16);
+          bSum += parseInt(hex.slice(4,6),16);
+          cCnt++;
+        }
+      }
+    });
+    counts.push(cnt);
+    binColors.push(cCnt > 0
+      ? 'rgba(' + Math.round(rSum/cCnt) + ',' + Math.round(gSum/cCnt) + ',' + Math.round(bSum/cCnt) + ',0.82)'
+      : 'rgba(74,144,217,0.82)');
+  }
+  return { counts: counts, colors: binColors };
+}
+
+/* ── Render histogram ─────────────────────────────────────── */
+
+function _renderHistogram(mapId, data, layerName, nBins) {
+  var body = document.getElementById('maplib-stats-body-' + mapId);
+  if (!body) return;
+
+  var switcher = _maplibSwitcher;
+  var multiMap = !!(switcher && switcher.mapsData && switcher.mapsData.length > 1);
+  var mapMode = multiMap ? (_maplibStatsPrefs.mapMode || 'active') : 'active';
+
+  var mapModeWrap = document.getElementById('maplib-stats-mapmode-' + mapId);
+  if (mapModeWrap) mapModeWrap.style.display = multiMap ? 'flex' : 'none';
+
+  // Gather one series per city that actually has this layer name, when in
+  // a cross-map mode; otherwise just the active map's series.
+  var perMap = [];
+  if (mapMode === 'active') {
+    var s = _extractSeries(mapId, data, layerName);
+    if (s) perMap.push({ name: null, series: s });
+  } else {
+    switcher.mapsData.forEach(function(md) {
+      var s2 = _extractSeries(md.mapId, md, layerName);
+      if (s2) perMap.push({ name: md.name, series: s2 });
+    });
+  }
+
+  if (!perMap.length) {
+    body.innerHTML = '<div class="maplib-stats-empty">Layer data not available</div>';
+    return;
+  }
+
+  var isNum = perMap[0].series.isNum;
+  var groupedByMarker = perMap[0].series.groupedByMarker;
+  var allValues = [].concat.apply([], perMap.map(function(p) { return p.series.values; }));
 
   // Show/hide bins control (only meaningful for un-grouped numeric data)
   var pinsWrap = document.getElementById('maplib-stats-pins-wrap-' + mapId);
@@ -677,33 +849,93 @@ function _renderHistogram(mapId, data, layerName, nBins) {
   var logBtn = togglesWrap ? togglesWrap.querySelector('.maplib-hist-toggle-log') : null;
   if (logBtn) logBtn.style.display = (isNum && !groupedByMarker) ? '' : 'none';
 
-  var hist = (isNum && !groupedByMarker)
-    ? _buildNumericHistogram(values, colors, nBins, _maplibStatsPrefs.log)
-    : _buildCategoricalHistogram(values, colors, icons);
+  var hist;            // { labels, counts, colors, icons? } — used for 'active'/'combined'
+  var multiDatasets = null; // used for 'separate': [{ label, counts, color }]
+
+  if (mapMode === 'active' || mapMode === 'combined' || perMap.length === 1) {
+    var mergedValues = allValues;
+    var mergedColors = [].concat.apply([], perMap.map(function(p) { return p.series.colors; }));
+    var mergedIcons  = groupedByMarker ? [].concat.apply([], perMap.map(function(p) { return p.series.icons || []; })) : null;
+    // Color bins by the column's own colormap (same scale as its legend)
+    // rather than by averaging per-feature colors, which drift once several
+    // maps — each normalized to its own vmin/vmax — are summed together.
+    var legendSpec = (isNum && !groupedByMarker) ? _getNumericLegendSpec(mapId, layerName) : null;
+    hist = (isNum && !groupedByMarker)
+      ? _buildNumericHistogram(mergedValues, mergedColors, nBins, _maplibStatsPrefs.log, legendSpec)
+      : _buildCategoricalHistogram(mergedValues, mergedColors, mergedIcons);
+  } else {
+    // 'separate': one dataset per city, sharing the same bins/labels.
+    var labels;
+    if (isNum && !groupedByMarker) {
+      var edges = _computeEdges(allValues, nBins, _maplibStatsPrefs.log);
+      labels = _edgeLabels(edges);
+      multiDatasets = perMap.map(function(p, i) {
+        var binned = _binNumericWithEdges(p.series.values, p.series.colors, edges);
+        return { label: p.name || ('Map ' + (i + 1)), counts: binned.counts, color: _MAPLIB_CITY_PALETTE[i % _MAPLIB_CITY_PALETTE.length] };
+      });
+    } else {
+      var catSet = {};
+      perMap.forEach(function(p) { p.series.values.forEach(function(v) { catSet[String(v)] = true; }); });
+      labels = Object.keys(catSet).sort();
+      multiDatasets = perMap.map(function(p, i) {
+        var counts = labels.map(function(lab) {
+          var n = 0;
+          p.series.values.forEach(function(v) { if (String(v) === lab) n++; });
+          return n;
+        });
+        return { label: p.name || ('Map ' + (i + 1)), counts: counts, color: _MAPLIB_CITY_PALETTE[i % _MAPLIB_CITY_PALETTE.length] };
+      });
+    }
+    hist = { labels: labels };
+  }
 
   if (!hist) {
     body.innerHTML = '<div class="maplib-stats-empty">Could not compute histogram</div>';
     return;
   }
 
-  var total = hist.counts.reduce(function(a, b) { return a + b; }, 0) || 1;
-  var displayCounts = _maplibStatsPrefs.pct
-    ? hist.counts.map(function(c) { return c / total * 100; })
-    : hist.counts.slice();
-  var axisLabel = _maplibStatsPrefs.pct ? '%' : 'Count';
+  var displayDatasets, axisLabel = _maplibStatsPrefs.pct ? '%' : 'Count';
+  if (multiDatasets) {
+    var totalAll = multiDatasets.reduce(function(a, d) { return a + d.counts.reduce(function(x,y){return x+y;},0); }, 0) || 1;
+    displayDatasets = multiDatasets.map(function(d) {
+      var displayCounts = _maplibStatsPrefs.pct
+        ? d.counts.map(function(c) { return c / totalAll * 100; })
+        : d.counts.slice();
+      return {
+        label: d.label,
+        data: displayCounts,
+        backgroundColor: d.color,
+        borderColor: d.color,
+        borderWidth: 1,
+        borderRadius: 3,
+      };
+    });
+  } else {
+    var total = hist.counts.reduce(function(a, b) { return a + b; }, 0) || 1;
+    var displayCounts2 = _maplibStatsPrefs.pct
+      ? hist.counts.map(function(c) { return c / total * 100; })
+      : hist.counts.slice();
+    displayDatasets = [{
+      data: displayCounts2,
+      backgroundColor: hist.colors,
+      borderColor: hist.colors.map(function(c) { return c.replace(',0.82)', ',1)'); }),
+      borderWidth: 1,
+      borderRadius: 3,
+    }];
+  }
 
-  // Build stats summary
+  // Build stats summary (computed over every value currently in view)
   var summaryHtml = '';
   if (isNum && !groupedByMarker) {
-    var sum = values.reduce(function(a,b){return a+b;},0);
-    var mean = sum / values.length;
-    var variance = values.reduce(function(a,v){return a+Math.pow(v-mean,2);},0) / values.length;
+    var sum = allValues.reduce(function(a,b){return a+b;},0);
+    var mean = sum / allValues.length;
+    var variance = allValues.reduce(function(a,v){return a+Math.pow(v-mean,2);},0) / allValues.length;
     var std = Math.sqrt(variance);
-    summaryHtml = '<b>n</b> ' + values.length
+    summaryHtml = '<b>n</b> ' + allValues.length
       + '&nbsp;&nbsp;<b>μ</b> ' + mean.toPrecision(4)
       + '&nbsp;&nbsp;<b>σ</b> ' + std.toPrecision(3);
   } else {
-    summaryHtml = '<b>n</b> ' + values.length + '&nbsp;&nbsp;<b>cats</b> ' + hist.labels.length;
+    summaryHtml = '<b>n</b> ' + allValues.length + '&nbsp;&nbsp;<b>cats</b> ' + hist.labels.length;
   }
 
   // Build DOM
@@ -729,20 +961,14 @@ function _renderHistogram(mapId, data, layerName, nBins) {
       type: 'bar',
       data: {
         labels: hist.labels,
-        datasets: [{
-          data: displayCounts,
-          backgroundColor: hist.colors,
-          borderColor: hist.colors.map(function(c) { return c.replace(',0.82)', ',1)'); }),
-          borderWidth: 1,
-          borderRadius: 3,
-        }]
+        datasets: displayDatasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { top: hist.icons ? 46 : 22 } },
+        layout: { padding: { top: (!multiDatasets && hist.icons) ? 46 : 22 } },
         plugins: {
-          legend: { display: false },
+          legend: { display: !!multiDatasets, labels: { font: { size: 10 } } },
           tooltip: {
             callbacks: {
               label: function(ctx) {
@@ -774,6 +1000,7 @@ function _renderHistogram(mapId, data, layerName, nBins) {
         // rendered twice.
         id: 'maplibBarLabels',
         afterDatasetsDraw: function(chart) {
+          if (multiDatasets) return; // too many bars per bin to label cleanly
           var ctx2 = chart.ctx;
           chart.data.datasets.forEach(function(dataset, i) {
             var meta = chart.getDatasetMeta(i);
