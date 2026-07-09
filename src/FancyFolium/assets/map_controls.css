@@ -1,5 +1,5 @@
 /* ============================================================
-   map_controls.css  —  FancyFolium
+   map_controls.css - FancyFolium
    ============================================================ */
 
 /* ── Panel container ─────────────────────────────────────── */
@@ -131,7 +131,7 @@
 }
 .maplib-hist-toggle-btn.active { background: #3b6fd8; border-color: #3b6fd8; color: #fff; }
 
-/* ── Scale bar — top-left after zoom ─────────────────────── */
+/* ── Scale bar - top-left after zoom ─────────────────────── */
 .leaflet-top.leaflet-left .leaflet-control-scale {
   margin-top: 8px;
   margin-left: 10px;

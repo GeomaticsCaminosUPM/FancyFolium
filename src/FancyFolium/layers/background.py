@@ -1,7 +1,7 @@
 """
 layers/background.py
 =====================
-``background_layer()`` — add a tile-based background layer to the map.
+``background_layer()`` - add a tile-based background layer to the map.
 """
 
 from __future__ import annotations

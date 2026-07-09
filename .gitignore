@@ -45,7 +45,10 @@ site/
 
 todo.txt
 publish_package.md
+RELEASING.md
+check_large_files.py
 
 # Example outputs
 examples/output/
 examples/map.html
+

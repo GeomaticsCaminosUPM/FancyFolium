@@ -145,7 +145,7 @@ def test_validate_count_column_accepts_integers():
 
 def test_validate_count_column_accepts_whole_number_floats():
     """float64 columns are common for count-like fields once they contain
-    NaNs (e.g. read from a GeoPackage) — accept them if every value is whole."""
+    NaNs (e.g. read from a GeoPackage) - accept them if every value is whole."""
     validate_count_column(pd.Series([1.0, 2.0, 3.0, None]))  # should not raise
 
 

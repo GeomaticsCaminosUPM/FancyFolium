@@ -82,7 +82,7 @@ def test_marker_layer_polygon_input_uses_centroid_with_warning(polygon_gdf):
 
 def test_marker_layer_never_builds_a_histogram_legend(point_gdf):
     """Histograms are a stats-panel (bottom-left button) feature, not a map
-    legend — marker_layer should only ever produce numeric/categorical/markers legends."""
+    legend - marker_layer should only ever produce numeric/categorical/markers legends."""
     m = ff.marker_layer(
         point_gdf, layer_name="pts", column="height", cmap="viridis", marker_column="roof",
     )
@@ -155,7 +155,7 @@ def test_marker_layer_rows_icon_uses_fixed_marker(point_gdf):
 
 
 def test_marker_layer_rows_icon_defaults_to_raw_category(point_gdf):
-    """Without marker=, each row's icon is the marker_column's own value —
+    """Without marker=, each row's icon is the marker_column's own value -
     e.g. if the caller pre-populated it with emojis, those are shown as-is."""
     m = ff.marker_layer(point_gdf, layer_name="pts", column="height", marker_column="roof")
     st = _state(m)

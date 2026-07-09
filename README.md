@@ -5,8 +5,18 @@ library with a fully-styled three-panel layer control, automatic legends,
 named colourmaps, emoji/icon markers, a statistics panel with live
 histograms, per-layer opacity sliders, and vector-to-raster conversion.
 
+FancyFolium exists to make it fast to turn geospatial research data - building-footprint surveys, raster models, structural/damage assessments - into interactive maps that both technical and non-technical audiences can
+explore, without hand-writing Leaflet/JavaScript for every project.
+
 [![PyPI](https://img.shields.io/pypi/v/fancyfolium)](https://pypi.org/project/fancyfolium/)
 [![Python](https://img.shields.io/pypi/pyversions/fancyfolium)](https://pypi.org/project/fancyfolium/)
+[![Docs](https://readthedocs.org/projects/fancyfolium/badge/?version=stable)](https://fancyfolium.readthedocs.io/en/stable/)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/GeomaticsCaminosUPM/FancyFolium/blob/main/examples/example.ipynb)
+
+By [Miguel Ureña Pliego](https://miguelurenapliego.github.io/) - [GitHub](https://github.com/MiguelUrenaPliego) ·
+[ORCID](https://orcid.org/0000-0001-6594-2566) ·
+[LinkedIn](https://www.linkedin.com/in/miguel-urena-pliego) - [Advanced Geomatics Research Group (AGA)](https://blogs.upm.es/aga/en/),
+Universidad Politécnica de Madrid. See [Author](#author) below for more.
 
 ---
 
@@ -33,6 +43,7 @@ histograms, per-layer opacity sliders, and vector-to-raster conversion.
 - [Errors and warnings](#errors-and-warnings)
 - [Documentation](#documentation)
 - [Development](#development)
+- [Author](#author)
 
 ---
 
@@ -50,7 +61,7 @@ pip install -e .
 ```
 
 **Requirements:** Python ≥ 3.9, `folium`, `geopandas`, `shapely`, `pandas`,
-`numpy`, `mapclassify`, and `rasterio` (raster features only — importing
+`numpy`, `mapclassify`, and `rasterio` (raster features only - importing
 `FancyFolium` itself does not require it).
 
 ---
@@ -78,17 +89,17 @@ m = ff.vector_layer(
 ff.export(m, "output/map.html")
 ```
 
-See [`examples/example.ipynb`](examples/example.ipynb) for a full walkthrough
-of every feature (background/raster/vector/marker layers, colourmaps, count
-columns, emoji markers, the statistics panel, `merge_maps`, and
-`vector_to_raster`) against real building-footprint data.
+See [`examples/example.ipynb`](examples/example.ipynb) for a short, beginner-friendly
+walkthrough (one raster layer, one polygon layer, one marker layer) against real
+building-footprint data - it also has an "Open in Colab" button, so you can run it
+without installing anything locally.
 
 ---
 
 ## Control panel
 
 Every map gets a floating control panel (top-right), a legend stack
-(bottom-right), and a statistics-panel button (bottom-left, 📊) — all
+(bottom-right), and a statistics-panel button (bottom-left, 📊) - all
 injected automatically, no extra setup required.
 
 ```
@@ -117,7 +128,7 @@ injected automatically, no extra setup required.
 ### `create_map(location=None, zoom=16)`
 
 Create a blank map with the control panel attached. No background tile is
-added — call `background_layer()` for that.
+added - call `background_layer()` for that.
 
 ```python
 m = ff.create_map(location=[14.6, -90.5], zoom=14)
@@ -141,7 +152,7 @@ def background_layer(
 Add a tile background. Built-in provider keys (case-insensitive):
 `"google hybrid"`, `"google satellite"`, `"google roads"`, `"osm"` /
 `"openstreetmap"`, `"cartodb light"`, `"cartodb dark"`, `"esri satellite"`,
-`"stamen toner"`, `"stamen terrain"` — or pass any Leaflet tile URL template
+`"stamen toner"`, `"stamen terrain"` - or pass any Leaflet tile URL template
 (`{x}`/`{y}`/`{z}`) directly.
 
 `opacity` defaults to each provider's own default (Google Hybrid defaults to
@@ -235,14 +246,14 @@ Add any polygon/line/point GeoDataFrame as a styled GeoJSON layer.
 
 | Parameter | Default | Notes |
 |---|---|---|
-| `gdf` | — | Any geometry; auto-reprojected to EPSG:4326. |
+| `gdf` | - | Any geometry; auto-reprojected to EPSG:4326. |
 | `layer_name` | `column` | Required when `column` is `None`. |
 | `column` | `None` | Attribute used for colour mapping (numeric, categorical, or count). |
 | `color` | `"blue"` | Uniform fill colour when no column. |
 | `cmap` | `None` | See [Colourmaps](#colourmaps-cmap). |
-| `vmin` / `vmax` | `None` | P10/P90 by default (0/max for count columns — see below). |
+| `vmin` / `vmax` | `None` | P10/P90 by default (0/max for count columns - see below). |
 | `categorical` | `False` | Force categorical treatment. Mutually exclusive with `count`. |
-| `count` | `False` | Treat `column` as a "counts" column — see [Count columns](#count-columns-counttrue). |
+| `count` | `False` | Treat `column` as a "counts" column - see [Count columns](#count-columns-counttrue). |
 | `overlay` | `False` | `True` → checkbox; `False` → dropdown. |
 | `popup` | `None` | See [Popups](#popups). |
 | `style` | `None` | See [Style](#style). |
@@ -290,8 +301,8 @@ Same as `vector_layer`, for point data, plus:
 | Extra parameter | Notes |
 |---|---|
 | `marker` | Fixed text/emoji (`str`) for every row, or a `{category: symbol}` dict overriding specific `marker_column` values. `None` shows each row's raw `marker_column` value as-is. |
-| `marker_column` | Column whose value is shown inside each marker (always categorical). Pre-populate it with emojis for emoji markers — see `FancyFolium.emoji_for_categories`. |
-| `histogram` | If `column` (colormap) and `marker_column` are both given, expose `marker_column` to the map's **statistics panel** (bottom-left 📊 button) so its per-category breakdown — with icons, class labels, and **#/%** / **lin/log** toggle buttons — can be viewed for this layer on demand, and add a marker-values legend. Default `True`. |
+| `marker_column` | Column whose value is shown inside each marker (always categorical). Pre-populate it with emojis for emoji markers - see `FancyFolium.emoji_for_categories`. |
+| `histogram` | If `column` (colormap) and `marker_column` are both given, expose `marker_column` to the map's **statistics panel** (bottom-left 📊 button) so its per-category breakdown - with icons, class labels, and **#/%** / **lin/log** toggle buttons - can be viewed for this layer on demand, and add a marker-values legend. Default `True`. |
 
 Markers with no `column`, `marker`, or `marker_column` render as a
 Google-Maps-style teardrop pin instead of a plain circle. When
@@ -314,8 +325,7 @@ m = ff.marker_layer(
 ### `merge_maps(maps, names)`
 
 Combine independent maps into one with a top-centre dropdown switcher.
-Every layer from every map lives on the first map's Leaflet instance —
-switching just toggles visibility, so it's instant and never re-renders.
+Every layer from every map lives on the first map's Leaflet instance - switching just toggles visibility, so it's instant and never re-renders.
 
 ```python
 merged = ff.merge_maps([m_city_a, m_city_b], ["Guatemala City", "San José"])
@@ -378,7 +388,7 @@ Pass `count=True` on `vector_layer`/`marker_layer`/`vector_to_raster` to
 treat a column as a **counts** field (number of storeys, population,
 occurrences, …) rather than a general continuous numeric column:
 
-- Validated via `FancyFolium.validate_count_column` — raises `TypeError`
+- Validated via `FancyFolium.validate_count_column` - raises `TypeError`
   unless every non-null value is a whole number (true integer dtypes and
   float dtypes with only whole-number values, e.g. from a GeoPackage column
   with missing values, are both accepted).
@@ -399,7 +409,7 @@ m = ff.vector_layer(gdf, column="n_storeys", count=True, cmap="Blues", m=m)
 # Simple list of column names, shown in both tooltip (hover) and popup (click)
 popup=["height", "n_storeys", "year"]
 
-# Dict form — control tooltip/popup independently
+# Dict form - control tooltip/popup independently
 popup={
     "fields":  ["height", "n_storeys", "year"],
     "tooltip": True,   # hover tooltip
@@ -440,10 +450,10 @@ marker layer and see a live histogram of its colormap `column`:
 
 Two toggle buttons apply to every histogram:
 
-- **`#` / `%`** — switch the y-axis between raw count and percent-of-total.
-- **`lin` / `log`** — switch how numeric histogram **bin edges** are chosen
-  (not the y-axis scale). Log-spaced bins give skewed data — e.g. a
-  handful of 100 m towers among many 3–12 m buildings — much better
+- **`#` / `%`** - switch the y-axis between raw count and percent-of-total.
+- **`lin` / `log`** - switch how numeric histogram **bin edges** are chosen
+  (not the y-axis scale). Log-spaced bins give skewed data - e.g. a
+  handful of 100 m towers among many 3–12 m buildings - much better
   resolution at the common end of the distribution than evenly-spaced
   bins would.
 
@@ -480,13 +490,13 @@ vector_to_raster(
 
 | Parameter | Default | Notes |
 |---|---|---|
-| `output_path` | — | `.tif`/`.tiff` → GTiff; anything else → PNG + `.meta.json` sidecar. |
+| `output_path` | - | `.tif`/`.tiff` → GTiff; anything else → PNG + `.meta.json` sidecar. |
 | `resolution` | `100.0` | Approximate pixel size in metres at the equator. |
 | `column` | `None` | Colour-mapping attribute (same as `vector_layer`). |
 | `cmap` | `None` | Same options as `vector_layer`. |
 | `vmin` / `vmax` | `None` | P10/P90 by default (0/max for `count=True`). |
 | `categorical` | `False` | Force categorical. Mutually exclusive with `count`. |
-| `count` | `False` | Treat `column` as a counts column — see [Count columns](#count-columns-counttrue). |
+| `count` | `False` | Treat `column` as a counts column - see [Count columns](#count-columns-counttrue). |
 | `opacity` | `1.0` | Alpha multiplier, 0–1. |
 | `fmt` | `"GTiff"` | rasterio driver name. |
 | `bounds` | `None` | Restrict to `[[S,W],[N,E]]`; defaults to the GeoDataFrame's bbox. |
@@ -545,7 +555,9 @@ python -m http.server -d docs/_build/html 8000   # http://127.0.0.1:8000
 ```
 
 See [`docs/`](docs/) for the source pages (`conf.py`, `index.rst`,
-`getting-started.md`, `api/*.rst`).
+`getting-started.md`, `api/*.rst`). For a runnable, hands-on introduction
+instead, see [`examples/example.ipynb`](examples/example.ipynb) - no local
+installation needed thanks to its "Open in Colab" button.
 
 ---
 
@@ -562,6 +574,26 @@ The `examples/` folder contains `example.ipynb`, a full walkthrough of every
 feature, and `data/*.gpkg` sample building-footprint datasets it runs
 against.
 
-See [`publish_package.md`](publish_package.md) (untracked — generate it
-locally, or ask for the publishing checklist) for the steps to cut and
-upload a release to PyPI.
+Releases are cut via `.github/workflows/release.yml`: pushing a `vX.Y.Z` tag
+builds the package, publishes to PyPI, and creates the GitHub Release
+automatically; the `latest`/`stable` documentation versions on Read the Docs
+stay in sync on their own from there.
+
+---
+
+## Author
+
+FancyFolium is developed by **Miguel Ureña Pliego**, as part of the
+[Advanced Geomatics Research Group (AGA)](https://blogs.upm.es/aga/en/) at the
+Universidad Politécnica de Madrid. The package grew out of the group's need to
+turn geospatial research data - building-footprint surveys,
+structural/damage assessments, raster models - into shareable, interactive
+maps for both technical and non-technical audiences, without hand-writing
+Leaflet/JavaScript for every project.
+
+- GitHub: [github.com/MiguelUrenaPliego](https://github.com/MiguelUrenaPliego)
+- Personal website: [miguelurenapliego.github.io](https://miguelurenapliego.github.io/)
+- ORCID: [orcid.org/0000-0001-6594-2566](https://orcid.org/0000-0001-6594-2566)
+- LinkedIn: [linkedin.com/in/miguel-urena-pliego](https://www.linkedin.com/in/miguel-urena-pliego)
+- Research group: [Advanced Geomatics Research Group (AGA)](https://blogs.upm.es/aga/en/),
+  Universidad Politécnica de Madrid

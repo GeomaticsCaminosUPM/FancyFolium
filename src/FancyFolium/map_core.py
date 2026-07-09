@@ -1,5 +1,5 @@
 """
-map_core.py  —  FancyFolium internal helpers
+map_core.py - FancyFolium internal helpers
 
 Private (leading-underscore) utilities shared by every layer builder in
 ``layers/``: per-map state storage, the custom control-panel/legend HTML+JS
@@ -138,7 +138,7 @@ def _rebuild_control_panel(m: folium.Map) -> None:
 
     Called by every layer builder after registering its layer, so the
     panel/legend HTML embedded in the map always reflects the current set
-    of layers. Safe to call repeatedly — each call replaces the previous
+    of layers. Safe to call repeatedly - each call replaces the previous
     panel/script elements.
 
     Args:
@@ -153,7 +153,17 @@ def _rebuild_control_panel(m: folium.Map) -> None:
     vec_layers = st["vector_layers"]
 
     def _layer_info(layers: List[dict]) -> List[dict]:
-        """Project internal layer-entry dicts to the subset sent to the JS side."""
+        """Project internal layer-entry dicts to the subset sent to the JS side.
+
+        Args:
+            layers: Internal layer-entry dicts (one of ``st["background_layers"]``,
+                ``st["raster_layers"]``, ``st["vector_layers"]``, etc.).
+
+        Returns:
+            A list of plain dicts holding only the fields the control-panel
+            JS needs (``name``, ``overlay``, ``id``, ``active``, ``js_var``,
+            plus the stats-panel metadata fields).
+        """
         return [
             {
                 "name":    l["name"],
@@ -188,13 +198,32 @@ def _rebuild_control_panel(m: folium.Map) -> None:
     first_active = "vector" if has_vec else ("bg" if has_bg else "raster")
 
     def _tab(key: str, label: str, has: bool) -> str:
-        """Render one control-panel tab button, or "" if its section is empty."""
+        """Render one control-panel tab button, or "" if its section is empty.
+
+        Args:
+            key: Section key (``"bg"``, ``"raster"``, or ``"vector"``).
+            label: Display label shown on the tab button.
+            has: Whether the section has any layers; if ``False`` the tab
+                is omitted entirely.
+
+        Returns:
+            The tab button's HTML, or ``""`` if ``has`` is ``False``.
+        """
         if not has: return ""
         cls = " active" if key == first_active else ""
         return (f'<button class="maplib-tab{cls}" onclick="maplibTab(this,\'{key}\')">{label}</button>\n')
 
     def _panel(key: str, has: bool) -> str:
-        """Render one control-panel body section, or "" if it's empty."""
+        """Render one control-panel body section, or "" if it's empty.
+
+        Args:
+            key: Section key (``"bg"``, ``"raster"``, or ``"vector"``).
+            has: Whether the section has any layers; if ``False`` the panel
+                body is omitted entirely.
+
+        Returns:
+            The panel body's HTML, or ``""`` if ``has`` is ``False``.
+        """
         if not has: return ""
         cls = " active" if key == first_active else ""
         return f"""
@@ -281,7 +310,7 @@ def _build_legend_spec(
         vmin: Lower scale bound for numeric columns.
         vmax: Upper scale bound for numeric columns.
         categorical: Force categorical treatment even for numeric columns.
-        count: Treat as a "counts" column — changes the numeric ``vmin``/
+        count: Treat as a "counts" column - changes the numeric ``vmin``/
             ``vmax`` defaults to ``0``/``series.max()``.
         unit: Optional unit string appended to numeric legend labels.
         legend_override: A caller-supplied legend spec (e.g. from
@@ -329,7 +358,7 @@ def _build_marker_legend_spec(
     """Build a legend spec mapping each ``marker_column`` category to its icon.
 
     Independent of (and shown alongside, when applicable) any colour legend
-    for a separate ``column`` — see :func:`FancyFolium.marker_layer`.
+    for a separate ``column`` - see :func:`FancyFolium.marker_layer`.
 
     Args:
         layer_name: Display name of the layer, used in the legend title.

@@ -1,5 +1,5 @@
 /* ============================================================
-   map_controls.js  —  FancyFolium
+   map_controls.js - FancyFolium
    ============================================================ */
 
 /* ── Utilities ────────────────────────────────────────────── */
@@ -52,7 +52,7 @@ function _buildDropdown(containerId, layers, mapId, emptyLabel) {
   label.textContent = 'Active layer';
 
   var sel = document.createElement('select');
-  sel.innerHTML = '<option value="">— ' + (emptyLabel || 'None') + ' —</option>';
+  sel.innerHTML = '<option value=""> - ' + (emptyLabel || 'None') + ' - </option>';
   var activeVal = '';
   layers.forEach(function(l) {
     var opt = document.createElement('option');
@@ -307,8 +307,7 @@ function _refreshLegends(mapId) {
         html += '<div class="maplib-legend-box"><div class="maplib-legend-title">' + _esc(spec.name || name) + '</div>' + sw + '</div>';
       } else if (spec.type === 'markers' && spec.entries) {
         // Skip the icon glyph when it's identical to the label (e.g. a
-        // marker_column that already holds emoji values as its own text) —
-        // showing the same symbol twice in one row is just noise.
+        // marker_column that already holds emoji values as its own text) - // showing the same symbol twice in one row is just noise.
         var mk = spec.entries.map(function(e) {
           var iconHtml = (e.icon && e.icon !== e.label)
             ? '<span class="maplib-legend-marker-icon">' + _esc(e.icon) + '</span>' : '';
@@ -372,7 +371,7 @@ function _initStatsPanel(mapId, data) {
   var sel = document.createElement('select');
   sel.id = 'maplib-stats-sel-' + mapId;
   var emptyOpt = document.createElement('option');
-  emptyOpt.value = ''; emptyOpt.textContent = '— choose layer —';
+  emptyOpt.value = ''; emptyOpt.textContent = ' - choose layer - ';
   sel.appendChild(emptyOpt);
   vecLayers.forEach(function(l) {
     var opt = document.createElement('option');
@@ -464,7 +463,7 @@ function _initStatsPanel(mapId, data) {
   panel.appendChild(body);
   document.body.appendChild(panel);
 
-  // Events — re-read window._MAPLIB_DATA[mapId] at fire time (rather than the
+  // Events - re-read window._MAPLIB_DATA[mapId] at fire time (rather than the
   // captured `data`) so a merge_maps() city switch is reflected here too.
   sel.addEventListener('change', function() {
     var live = (window._MAPLIB_DATA || {})[mapId] || data;
@@ -495,7 +494,7 @@ function _updateStatsPanelLayers(mapId, data) {
   if (!sel) return;
   sel.innerHTML = '';
   var emptyOpt = document.createElement('option');
-  emptyOpt.value = ''; emptyOpt.textContent = '— choose layer —';
+  emptyOpt.value = ''; emptyOpt.textContent = ' - choose layer - ';
   sel.appendChild(emptyOpt);
   (data.vecLayers || []).forEach(function(l) {
     var opt = document.createElement('option');
@@ -610,8 +609,8 @@ function _buildNumericHistogram(values, colors, nBins, useLogBins, legendSpec) {
   if (mn === mx) { mn -= 0.5; mx += 0.5; }
 
   // Log-spaced bin *edges* (not a log y-axis): most real-world distributions
-  // (building heights, populations, …) are right-skewed — a few very large
-  // values alongside many small ones — so evenly-spaced edges dump almost
+  // (building heights, populations, …) are right-skewed - a few very large
+  // values alongside many small ones - so evenly-spaced edges dump almost
   // everything into the first bin. Spacing edges logarithmically instead
   // gives every order of magnitude its own share of bins.
   var canLog = useLogBins && mn > 0;
@@ -849,7 +848,7 @@ function _renderHistogram(mapId, data, layerName, nBins) {
   var logBtn = togglesWrap ? togglesWrap.querySelector('.maplib-hist-toggle-log') : null;
   if (logBtn) logBtn.style.display = (isNum && !groupedByMarker) ? '' : 'none';
 
-  var hist;            // { labels, counts, colors, icons? } — used for 'active'/'combined'
+  var hist;            // { labels, counts, colors, icons? } - used for 'active'/'combined'
   var multiDatasets = null; // used for 'separate': [{ label, counts, color }]
 
   if (mapMode === 'active' || mapMode === 'combined' || perMap.length === 1) {
@@ -858,7 +857,7 @@ function _renderHistogram(mapId, data, layerName, nBins) {
     var mergedIcons  = groupedByMarker ? [].concat.apply([], perMap.map(function(p) { return p.series.icons || []; })) : null;
     // Color bins by the column's own colormap (same scale as its legend)
     // rather than by averaging per-feature colors, which drift once several
-    // maps — each normalized to its own vmin/vmax — are summed together.
+    // maps - each normalized to its own vmin/vmax - are summed together.
     var legendSpec = (isNum && !groupedByMarker) ? _getNumericLegendSpec(mapId, layerName) : null;
     hist = (isNum && !groupedByMarker)
       ? _buildNumericHistogram(mergedValues, mergedColors, nBins, _maplibStatsPrefs.log, legendSpec)
@@ -993,7 +992,7 @@ function _renderHistogram(mapId, data, layerName, nBins) {
       },
       plugins: [{
         // Draw the value above each bar; for marker_column-grouped bars,
-        // also draw the icon once above that — but only when the icon is
+        // also draw the icon once above that - but only when the icon is
         // actually a distinct symbol from the class's own text label (the
         // x-axis tick, from hist.labels), so a marker_column that already
         // holds emoji values (icon === label) doesn't get the same glyph
@@ -1046,7 +1045,7 @@ function _renderHistogram(mapId, data, layerName, nBins) {
    …) from the secondary maps onto the first ("base") map, so at runtime
    every layer from every city actually lives on the same single Leaflet
    map instance (window[baseMapId]). Switching cities therefore never needs
-   to look up a second Leaflet map object — it only needs to toggle which
+   to look up a second Leaflet map object - it only needs to toggle which
    city's layers (by js_var) are attached to that one map, and rebuild the
    control panel / legends from that city's own layer metadata.        ── */
 

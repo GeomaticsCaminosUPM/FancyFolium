@@ -247,7 +247,7 @@ def emoji_for_categories(values: List) -> Dict[str, str]:
 
     Args:
         values: Category values (any hashable/stringable type) to assign
-            emoji to. Duplicates are fine — only unique values get an entry.
+            emoji to. Duplicates are fine - only unique values get an entry.
 
     Returns:
         A mapping of each value's string form to its assigned emoji.
@@ -328,7 +328,7 @@ def resolve_cmap(
     """Normalise a ``cmap`` argument into a concrete colour-mapping form.
 
     Args:
-        cmap: Colour map argument — ``None``, a named palette string, a
+        cmap: Colour map argument - ``None``, a named palette string, a
             ``t -> hex`` callable, a ``{value: hex}`` dict, or an ordered
             list of hex colours (the last two are categorical-only).
         is_categorical: Whether the target column is categorical.

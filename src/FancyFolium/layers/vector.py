@@ -1,7 +1,7 @@
 """
 layers/vector.py
 ================
-``vector_layer()`` — add a polygon/line/point GeoDataFrame as a styled
+``vector_layer()`` - add a polygon/line/point GeoDataFrame as a styled
 GeoJSON overlay.
 """
 
@@ -87,7 +87,7 @@ def _build_style_function(
         count: Treat ``column`` as a "counts" column (see
             :func:`FancyFolium.utils.color.validate_count_column`).
         opacity: Default fill opacity, overridden by ``style["fill_opacity"]``.
-        style: Style overrides — a dict of ``stroke_color``, ``stroke_width``/
+        style: Style overrides - a dict of ``stroke_color``, ``stroke_width``/
             ``weight``, ``stroke_opacity``, ``dashArray``/``dash_array``,
             ``fill``/``fill_opacity``; or a plain string (reserved, stored
             as ``{"css": style}`` but currently unused by the style
@@ -121,7 +121,16 @@ def _build_style_function(
     fill_opacity   = float(fill_val) if fill_val is not None else style_dict.get("fill_opacity", opacity)
 
     def style_fn(feature: dict) -> dict:
-        """Per-feature Leaflet style dict, reading colour from ``__color``."""
+        """Per-feature Leaflet style dict, reading colour from ``__color``.
+
+        Args:
+            feature: A single GeoJSON feature dict, as passed by Folium/Leaflet,
+                whose ``properties.__color`` holds this row's fill colour.
+
+        Returns:
+            A Leaflet path-style dict (``fillColor``, ``fillOpacity``,
+            ``color``, ``weight``, ``opacity``, and optionally ``dashArray``).
+        """
         fc = feature["properties"].get("__color", color)
         s = {
             "fillColor":   fc,
@@ -167,9 +176,9 @@ def vector_layer(
         layer_name: Display name shown in the control panel and legend.
             Defaults to ``column``. Required if ``column`` is ``None``.
         column: Column to colour features by (numeric, categorical, or
-            count — see ``categorical``/``count``).
+            count - see ``categorical``/``count``).
         color: Uniform fill/stroke colour used when ``column`` is ``None``.
-        cmap: Colour map argument — ``None`` (default palette), a named
+        cmap: Colour map argument - ``None`` (default palette), a named
             palette string (``"viridis"``, ``"Reds"``, ...), a
             ``t -> hex`` callable, a ``{value: hex}`` dict, or an ordered
             list of hex colours (dict/list imply categorical treatment).
@@ -193,7 +202,7 @@ def vector_layer(
             show in both; or a dict with ``"fields"`` and optional
             ``"tooltip"``/``"popup"`` bool toggles.
         m: Map to add the layer to. A new map is created if omitted.
-        style: Style overrides — see :func:`_build_style_function` for the
+        style: Style overrides - see :func:`_build_style_function` for the
             supported keys (``stroke_color``, ``weight``, ``dashArray``,
             ``fill_opacity``, etc.).
         legend: Whether to show a legend for this layer's ``column``.

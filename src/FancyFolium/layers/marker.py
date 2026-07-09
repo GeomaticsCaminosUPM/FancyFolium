@@ -1,7 +1,7 @@
 """
 layers/marker.py
 ================
-``marker_layer()`` — add a point GeoDataFrame as colour- and/or icon-coded
+``marker_layer()`` - add a point GeoDataFrame as colour- and/or icon-coded
 markers.
 """
 
@@ -32,10 +32,10 @@ def _resolve_marker_map(marker: MarkerArg, categories: List[str]) -> Optional[Di
               categories not covered fall back to their own raw
               ``marker_column`` value (so a partial override dict doesn't
               blank out the rest).
-            - ``str``: not resolved here — a fixed marker is applied
+            - ``str``: not resolved here - a fixed marker is applied
               uniformly by the caller instead of varying per category.
             - ``None``: each row shows its own raw ``marker_column`` value
-              as-is — e.g. pre-populate ``marker_column`` with emojis (see
+              as-is - e.g. pre-populate ``marker_column`` with emojis (see
               :func:`FancyFolium.emoji_for_categories`) to have emojis
               shown without needing ``marker=``.
         categories: The ``marker_column``'s unique category values.
@@ -88,10 +88,10 @@ def marker_layer(
         layer_name: Display name shown in the control panel and legend.
             Defaults to ``column``. Required if ``column`` is ``None``.
         column: Column used for the colormap (numeric, categorical, or
-            count — see ``categorical``/``count``).
+            count - see ``categorical``/``count``).
         marker_column: Column holding the (always categorical) class shown
             as the marker's label/icon, varying per row. Its raw values
-            are shown as-is unless overridden by ``marker`` — so
+            are shown as-is unless overridden by ``marker`` - so
             pre-populate it with emojis (see
             :func:`FancyFolium.emoji_for_categories`, or your own dict of
             category -> emoji) to have emoji markers.
@@ -104,7 +104,7 @@ def marker_layer(
               back to their own raw ``marker_column`` value.
             - ``None``: each row shows its own raw ``marker_column`` value.
         color: Uniform fill colour used when ``column`` is ``None``.
-        cmap: Colour map argument — see :func:`FancyFolium.vector_layer`.
+        cmap: Colour map argument - see :func:`FancyFolium.vector_layer`.
         vmin: Lower colour-scale bound for numeric/count columns.
         vmax: Upper colour-scale bound for numeric/count columns.
         categorical: Treat ``column`` as categorical. Mutually exclusive
@@ -122,9 +122,9 @@ def marker_layer(
             show in both; or a dict with ``"fields"`` and optional
             ``"tooltip"``/``"popup"`` bool toggles.
         m: Map to add the layer to. A new map is created if omitted.
-        style: Style overrides — currently ``stroke_color`` and ``weight``
+        style: Style overrides - currently ``stroke_color`` and ``weight``
             (marker border colour/width).
-        legend: Whether to show legend(s) for this layer — a colour
+        legend: Whether to show legend(s) for this layer - a colour
             legend for ``column`` and/or a marker-values legend for
             ``marker_column`` (see ``histogram`` below for when the latter
             is built).

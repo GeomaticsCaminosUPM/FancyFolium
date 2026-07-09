@@ -34,7 +34,7 @@ def create_map(
 ) -> folium.Map:
     """Create a blank Folium map with the FancyFolium control panel attached.
 
-    No background tile is added — use :func:`background_layer` for that.
+    No background tile is added - use :func:`background_layer` for that.
 
     Args:
         location: Initial ``[lat, lon]`` center. Defaults to ``[0, 0]``.
@@ -75,7 +75,7 @@ def merge_maps(
     corresponding to each other when preserving active state on switch.
 
     Args:
-        maps: Maps to combine — at least two are required.
+        maps: Maps to combine - at least two are required.
         names: Display name for each map's dropdown entry, in the same
             order as ``maps``.
 
@@ -119,7 +119,7 @@ def merge_maps(
             child.add_to(base)
 
     # Only base's own control-panel script (added by create_map/_rebuild_control_panel)
-    # ends up in the saved HTML — every other map's `get_root().html` children (its
+    # ends up in the saved HTML - every other map's `get_root().html` children (its
     # legend div + the script populating window._MAPLIB_LEGENDS[its mapId]) are
     # discarded since only `base` is rendered. Re-inject those legends here so the
     # switcher has something to look up when it points at a non-base city.
@@ -188,17 +188,17 @@ def export(
     """Export a map as an HTML file with raster overlays as sibling files.
 
     Base64-embedded raster images are always extracted to
-    ``{html_dir}/{raster_path}/`` as individual PNG files, and the HTML is
-    rewritten to reference them via relative paths instead of embedding them
-    inline — this keeps the HTML file itself small even when a map has many
-    or large raster overlays.
+    ``{html_dir}/{raster_path}/`` as individual JPEG/PNG files, and the HTML
+    is rewritten to reference them via relative paths instead of embedding
+    them inline - this keeps the HTML file itself small even when a map has
+    many or large raster overlays.
 
     Args:
         m: The map to export.
         path: Destination HTML file path. Parent directories are created
             if needed.
         raster_path: Subdirectory (relative to ``path``'s parent) that
-            extracted raster PNGs are written to.
+            extracted raster images are written to.
     """
     out_path = Path(path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -208,17 +208,32 @@ def export(
     raster_dir.mkdir(parents=True, exist_ok=True)
 
     html_text = out_path.read_text(encoding="utf-8")
-    pattern   = re.compile(r'src="(data:image/png;base64,([^"]+))"')
-    idx       = 0
+    # folium embeds ImageOverlay images as a raw JS string literal
+    # (`L.imageOverlay("data:image/png;base64,...", ...)`), not as an HTML
+    # `src="..."` attribute, so the match must not require a `src=` prefix - # only the quoted data-URI itself.
+    pattern = re.compile(r'"(data:image/(png|jpeg);base64,([^"]+))"')
+    idx     = 0
 
     def _replacer(match: "re.Match") -> str:
-        """Write one embedded base64 PNG to disk and return its relative src=."""
+        """Write one embedded base64 image to disk and return its relative path, quoted.
+
+        Args:
+            match: A regex match of a quoted ``data:image/(png|jpeg);base64,...``
+                data-URI, as produced by :attr:`pattern`.
+
+        Returns:
+            The quoted, forward-slash relative path (e.g. ``"rasters/raster_0000.jpg"``)
+            to substitute in place of the matched data-URI.
+        """
         nonlocal idx
         import base64 as _b64
-        fname = f"raster_{idx:04d}.png"
-        (raster_dir / fname).write_bytes(_b64.b64decode(match.group(2)))
+        ext   = "jpg" if match.group(2) == "jpeg" else "png"
+        fname = f"raster_{idx:04d}.{ext}"
+        (raster_dir / fname).write_bytes(_b64.b64decode(match.group(3)))
         idx += 1
-        return f'src="{Path(raster_path) / fname}"'
+        # Always forward slashes: this path is embedded in HTML/JS as a URL,
+        # not a filesystem path, so Windows' backslash separator would break it.
+        return f'"{(Path(raster_path) / fname).as_posix()}"'
 
     out_path.write_text(pattern.sub(_replacer, html_text), encoding="utf-8")
     if idx:

@@ -48,21 +48,55 @@ def _normalize_array_to_uint8(arr: np.ndarray) -> np.ndarray:
     return np.zeros_like(arr, dtype=np.uint8)
 
 
+def _encode_image_data_uri(img_pil: "Image.Image") -> str:
+    """Encode a PIL image as a base64 data-URI, preferring JPEG for size.
+
+    JPEG (with its ~5-10x smaller file size than PNG) is used whenever the
+    image has no real transparency to preserve; PNG is only used when the
+    alpha channel actually varies (i.e. some pixels are non-opaque), since
+    JPEG has no alpha channel at all.
+
+    Args:
+        img_pil: An RGBA (or any PIL-openable) image.
+
+    Returns:
+        A ``"data:image/jpeg;base64,..."`` or ``"data:image/png;base64,..."``
+        data-URI, whichever is smaller without losing transparency.
+    """
+    has_transparency = (
+        img_pil.mode == "RGBA" and img_pil.getchannel("A").getextrema() != (255, 255)
+    )
+    buf = io.BytesIO()
+    if has_transparency:
+        img_pil.save(buf, format="PNG")
+        mime = "image/png"
+    else:
+        img_pil.convert("RGB").save(buf, format="JPEG", quality=90)
+        mime = "image/jpeg"
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:{mime};base64,{b64}"
+
+
 def raster_to_png_base64(
     raster_path: str,
     bounds: Optional[List[List[float]]] = None,
 ) -> Tuple[str, List[List[float]]]:
-    """Read a geo-referenced raster and encode it as a base64 PNG data-URI.
+    """Read a geo-referenced raster and encode it as a base64 image data-URI.
+
+    The image is saved as JPEG (much smaller than PNG) unless it actually
+    uses transparency (e.g. a ``vector_to_raster`` output with empty
+    background pixels), in which case PNG is used to preserve the alpha
+    channel.
 
     Args:
         raster_path: Path to a raster file readable by rasterio.
-        bounds: Optional ``[[south, west], [north, east]]`` in EPSG:4326 —
-            if given, only the overlapping window is read (via
+        bounds: Optional ``[[south, west], [north, east]]`` in EPSG:4326 - if given, only the overlapping window is read (via
             :func:`FancyFolium.utils.geo.clip_raster_to_bounds`).
 
     Returns:
-        A tuple of the ``"data:image/png;base64,..."`` data-URI and the
-        raster's bounds as ``[[south, west], [north, east]]`` in EPSG:4326.
+        A tuple of the ``"data:image/jpeg;base64,..."`` (or ``.../png...``)
+        data-URI and the raster's bounds as ``[[south, west], [north, east]]``
+        in EPSG:4326.
 
     Raises:
         ValueError: If the file has no CRS and no ``bounds`` were supplied.
@@ -100,30 +134,28 @@ def raster_to_png_base64(
         rgb = _normalize_array_to_uint8(rgb)
         img_pil = Image.fromarray(np.dstack([rgb, alpha.astype(np.uint8)]), mode="RGBA")
 
-    buf = io.BytesIO()
-    img_pil.save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode()
-    return f"data:image/png;base64,{b64}", img_bounds
+    return _encode_image_data_uri(img_pil), img_bounds
 
 
 def image_to_png_base64(image_path: str) -> str:
-    """Convert any PIL-readable image to a base64-encoded PNG data-URI.
+    """Convert any PIL-readable image to a base64-encoded image data-URI.
 
-    CRS/bounds are not inferred here — pass ``bounds=`` to
+    Saved as JPEG (much smaller than PNG) unless the source image actually
+    uses transparency, in which case PNG is used to preserve the alpha
+    channel. CRS/bounds are not inferred here - pass ``bounds=`` to
     :func:`FancyFolium.raster_layer` for plain (non-geo-referenced) images.
 
     Args:
         image_path: Path to any image file Pillow can open.
 
     Returns:
-        The image re-encoded as a ``"data:image/png;base64,..."`` data-URI.
+        The image re-encoded as a ``"data:image/jpeg;base64,..."`` (or
+        ``.../png...``) data-URI.
     """
     from PIL import Image
 
     img = Image.open(image_path).convert("RGBA")
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+    return _encode_image_data_uri(img)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -161,7 +193,7 @@ def vector_to_raster(
             omitted.
         color: Uniform fill colour used when ``column`` is ``None``, or as
             a fallback for rows with no computed colour.
-        cmap: Colour map argument — see :func:`FancyFolium.vector_layer`.
+        cmap: Colour map argument - see :func:`FancyFolium.vector_layer`.
         vmin: Lower colour-scale bound for numeric ``column`` values.
         vmax: Upper colour-scale bound for numeric ``column`` values.
         categorical: Treat ``column`` as categorical rather than continuous
@@ -251,7 +283,15 @@ def vector_to_raster(
         color_map = {idx: color for idx in gdf.index}
 
     def _hex_to_rgba(h: str, alpha: int = 255) -> Tuple[int, int, int, int]:
-        """Convert a ``"#rrggbb"`` hex string to an ``(r, g, b, alpha)`` tuple."""
+        """Convert a ``"#rrggbb"`` hex string to an ``(r, g, b, alpha)`` tuple.
+
+        Args:
+            h: A ``"#rrggbb"`` or ``"#rgb"`` hex colour string.
+            alpha: Alpha value (0-255) to attach to the returned tuple.
+
+        Returns:
+            An ``(r, g, b, alpha)`` tuple of ``0-255`` ints.
+        """
         h = h.lstrip("#")
         if len(h) == 3:
             h = "".join(c * 2 for c in h)

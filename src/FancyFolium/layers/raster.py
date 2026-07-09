@@ -1,7 +1,7 @@
 """
 layers/raster.py
 ================
-``raster_layer()`` — add a georeferenced (or plain) raster image overlay.
+``raster_layer()`` - add a georeferenced (or plain) raster image overlay.
 """
 
 from __future__ import annotations

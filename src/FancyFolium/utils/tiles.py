@@ -10,7 +10,7 @@ as expected by Leaflet TileLayer.
 Max zoom notes
 --------------
 Most tile providers top out at native zoom 19–20.  Leaflet can still render
-beyond that by up-scaling the last available tile — this is controlled by
+beyond that by up-scaling the last available tile - this is controlled by
 ``max_native_zoom`` (last available tile) vs ``max_zoom`` (Leaflet UI limit).
 We set max_zoom=26 globally so users can always zoom in; Leaflet will
 gracefully up-scale beyond max_native_zoom.

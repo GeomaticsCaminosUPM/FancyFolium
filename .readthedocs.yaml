@@ -1,0 +1,29 @@
+# Read the Docs configuration - see https://docs.readthedocs.io/en/stable/config-file/v2.html
+#
+# Once this repository is imported on readthedocs.org, RTD automatically
+# maintains two long-lived doc versions from this one config, with no extra
+# setup:
+#   - "latest": always built from the default branch (main).
+#   - "stable": always built from the highest semver git tag (vX.Y.Z) -
+#     recreated automatically every time a new release tag is pushed.
+# See RELEASING.md for the one-time project import steps and how versioning
+# behaves release to release.
+
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+
+sphinx:
+  configuration: docs/conf.py
+  fail_on_warning: false
+
+python:
+  install:
+    - requirements: requirements-docs.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - raster

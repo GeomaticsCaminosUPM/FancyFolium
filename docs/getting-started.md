@@ -11,7 +11,7 @@ pip install "fancyfolium[raster]"
 ## Control panel
 
 Every map gets a floating control panel (top-right), a legend stack
-(bottom-right), and a statistics-panel button (bottom-left, 📊) — all
+(bottom-right), and a statistics-panel button (bottom-left, 📊) - all
 injected automatically.
 
 - **Dropdown** sections (`overlay=False` layers): radio-style, only one
@@ -20,7 +20,7 @@ injected automatically.
   toggled independently.
 - **⚙** next to each layer reveals an opacity slider for that layer alone.
 - Legends (bottom-right) update automatically as layers are toggled.
-- **📊** (bottom-left) opens the statistics panel — pick any vector/marker
+- **📊** (bottom-left) opens the statistics panel - pick any vector/marker
   layer to see a live histogram of its colormap column.
 
 ## Colourmaps (`cmap`)
@@ -51,17 +51,18 @@ helper.
 ## Statistics panel & histograms
 
 Pick any vector/marker layer in the 📊 panel to see a histogram of its
-colormap column — binned for numeric columns, one bar per category for
+colormap column - binned for numeric columns, one bar per category for
 categorical ones, or grouped by `marker_column` for marker layers that use
 it. Two toggle buttons apply everywhere:
 
-- **`#` / `%`** — count vs. percent-of-total on the y-axis.
-- **`lin` / `log`** — linear vs. logarithmic *bin edges* for numeric
-  histograms (not the y-axis) — much better resolution for skewed data
+- **`#` / `%`** - count vs. percent-of-total on the y-axis.
+- **`lin` / `log`** - linear vs. logarithmic *bin edges* for numeric
+  histograms (not the y-axis) - much better resolution for skewed data
   like building heights.
 
 ## Next steps
 
+- {doc}`examples` for a short, step-by-step walkthrough (one raster layer, one
+  polygon layer, one marker layer) - runnable directly in Google Colab, no
+  install needed.
 - The API reference (sidebar) for every function's full parameter list.
-- The [example notebook](https://github.com/MiguelUrenaPliego/FancyFolium/blob/main/examples/example.ipynb)
-  for a runnable, end-to-end tour.

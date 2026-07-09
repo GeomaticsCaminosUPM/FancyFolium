@@ -1,6 +1,6 @@
 [project]
 name = "fancyfolium"
-version = "0.1.0"
+version = "1.0.0"
 description = "Composable Folium mapping library with a custom layer control, automatic legends, emoji markers, a statistics panel, and vector-to-raster conversion."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -10,7 +10,7 @@ authors = [
 ]
 keywords = ["folium", "leaflet", "geopandas", "gis", "maps", "geospatial"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Raster I/O (raster_layer / vector_to_raster) — every rasterio import in the
+# Raster I/O (raster_layer / vector_to_raster) - every rasterio import in the
 # package is lazy, so importing FancyFolium itself never requires this.
 raster = [
     "rasterio>=1.4.3",
@@ -43,9 +43,11 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MiguelUrenaPliego/FancyFolium"
-Documentation = "https://github.com/MiguelUrenaPliego/FancyFolium#readme"
-Repository = "https://github.com/MiguelUrenaPliego/FancyFolium"
+Homepage = "https://github.com/GeomaticsCaminosUPM/FancyFolium"
+Documentation = "https://github.com/GeomaticsCaminosUPM/FancyFolium#readme"
+Repository = "https://github.com/GeomaticsCaminosUPM/FancyFolium"
+Author = "https://miguelurenapliego.github.io/"
+"Research group" = "https://blogs.upm.es/aga/en/"
 
 [dependency-groups]
 dev = [

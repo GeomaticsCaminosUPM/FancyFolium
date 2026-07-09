@@ -6,6 +6,18 @@ mapping library with a fully-styled three-panel layer control, automatic
 legends, named colourmaps, emoji/icon markers, a statistics panel with live
 histograms, per-layer opacity sliders, and vector-to-raster conversion.
 
+FancyFolium was written to make it fast to turn geospatial research data -
+building-footprint surveys, raster models, damage/risk assessments - into
+interactive maps that both technical and non-technical audiences can explore,
+without hand-writing Leaflet/JavaScript for every project.
+
+By `Miguel Ureña Pliego <https://miguelurenapliego.github.io/>`_ -
+`GitHub <https://github.com/MiguelUrenaPliego>`_ ·
+`ORCID <https://orcid.org/0000-0001-6594-2566>`_ ·
+`LinkedIn <https://www.linkedin.com/in/miguel-urena-pliego>`_ -
+`Advanced Geomatics Research Group (AGA) <https://blogs.upm.es/aga/en/>`_,
+Universidad Politécnica de Madrid. See :doc:`author` for more.
+
 .. code-block:: python
 
    import geopandas as gpd
@@ -21,19 +33,27 @@ histograms, per-layer opacity sliders, and vector-to-raster conversion.
    )
    ff.export(m, "output/map.html")
 
-See :doc:`getting-started` for the control-panel/statistics-panel tour, or
-jump straight to the API reference below for every function's parameters.
-
-The `example notebook
-<https://github.com/MiguelUrenaPliego/FancyFolium/blob/main/examples/example.ipynb>`_
-in the repository walks through every feature against real
-building-footprint data.
+See :doc:`getting-started` for the control-panel/statistics-panel tour,
+:doc:`examples` for a longer step-by-step walkthrough (also runnable in
+Google Colab), or jump straight to the API reference for every function's
+parameters.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Getting started
 
    getting-started
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples
+
+   examples
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API reference
+
    api/map
    api/background
    api/raster
@@ -43,8 +63,13 @@ building-footprint data.
    api/geo
    api/raster_utils
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Author
+
+   author
+
 Indices
 =======
 
 * :ref:`genindex`
-* :ref:`modindex`
