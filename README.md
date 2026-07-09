@@ -13,6 +13,8 @@ explore, without hand-writing Leaflet/JavaScript for every project.
 [![Docs](https://readthedocs.org/projects/fancyfolium/badge/?version=stable)](https://fancyfolium.readthedocs.io/en/stable/)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/GeomaticsCaminosUPM/FancyFolium/blob/main/examples/example.ipynb)
 
+📖 **[Documentation](https://fancyfolium.readthedocs.io/en/latest/)**
+
 By [Miguel Ureña Pliego](https://miguelurenapliego.github.io/) - [GitHub](https://github.com/MiguelUrenaPliego) ·
 [ORCID](https://orcid.org/0000-0001-6594-2566) ·
 [LinkedIn](https://www.linkedin.com/in/miguel-urena-pliego) - [Advanced Geomatics Research Group (AGA)](https://blogs.upm.es/aga/en/),
@@ -553,10 +555,11 @@ vector_to_raster(
 
 ## Documentation
 
-Full API reference (generated from the Google-style docstrings in the
-source via `sphinx.ext.autodoc` + `sphinx.ext.napoleon`) is built with
-[Sphinx](https://www.sphinx-doc.org/) + the [Furo](https://github.com/pradyunsg/furo)
-theme. To build and view it locally:
+The full docs (getting started, examples, API reference) are hosted at
+**https://fancyfolium.readthedocs.io/en/latest/**, generated from the
+Google-style docstrings in the source via `sphinx.ext.autodoc` +
+`sphinx.ext.napoleon`, built with [Sphinx](https://www.sphinx-doc.org/) + the
+[Furo](https://github.com/pradyunsg/furo) theme. To build and view it locally:
 
 ```bash
 pip install -r requirements-docs.txt
