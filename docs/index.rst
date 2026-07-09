@@ -11,6 +11,8 @@ building-footprint surveys, raster models, damage/risk assessments - into
 interactive maps that both technical and non-technical audiences can explore,
 without hand-writing Leaflet/JavaScript for every project.
 
+📦 `GitHub repository <https://github.com/GeomaticsCaminosUPM/FancyFolium>`_
+
 By `Miguel Ureña Pliego <https://miguelurenapliego.github.io/>`_ -
 `GitHub <https://github.com/MiguelUrenaPliego>`_ ·
 `ORCID <https://orcid.org/0000-0001-6594-2566>`_ ·
