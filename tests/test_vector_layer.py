@@ -101,3 +101,31 @@ def test_vector_layer_no_crs_warns(polygon_gdf):
     no_crs.crs = None
     with pytest.warns(UserWarning):
         ff.vector_layer(no_crs, layer_name="no-crs", column="height")
+
+
+def test_vector_layer_color_by_column_false_keeps_uniform_color_but_tracks_column(polygon_gdf):
+    m = ff.vector_layer(
+        polygon_gdf, layer_name="fixed", column="height", color="#000000",
+        color_by_column=False,
+    )
+    st = _state(m)
+    entry = st["vector_layers"][0]
+    # Column is still tracked (stats panel reads this), but no legend is
+    # auto-built since the map isn't actually coloured by it.
+    assert entry["column"] == "height"
+    assert entry["is_num"] is True
+    assert "fixed" not in st["legends"]
+
+    geojson = m._children[list(m._children.keys())[-1]]
+    # Walk down to the actual folium.GeoJson child inside the FeatureGroup.
+    inner = list(geojson._children.values())[0]
+    for feature in inner.data["features"]:
+        assert feature["properties"]["__color"] == "#000000"
+        # The real column value survives untouched for the stats panel.
+        assert feature["properties"]["height"] == feature["properties"]["height"]
+
+
+def test_vector_layer_color_by_column_true_is_default(polygon_gdf):
+    m = ff.vector_layer(polygon_gdf, layer_name="colored", column="height", cmap="Reds")
+    st = _state(m)
+    assert "colored" in st["legends"]

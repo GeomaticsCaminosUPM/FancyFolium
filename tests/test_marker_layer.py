@@ -200,6 +200,24 @@ def test_marker_layer_categorical_column_rows_carry_string_values(point_gdf):
     assert values == {"masonry", "concrete", "steel"}
 
 
+def test_marker_layer_color_by_column_false_keeps_uniform_color_but_tracks_column(point_gdf):
+    m = ff.marker_layer(
+        point_gdf, layer_name="fixed", column="height", color="#000000",
+        color_by_column=False,
+    )
+    st = _state(m)
+    entry = next(e for e in st["vector_layers"] if e["name"] == "fixed")
+    # Column is still tracked (stats panel reads this from `rows`), but no
+    # legend is auto-built since the map isn't actually coloured by it.
+    assert entry["column"] == "height"
+    assert entry["is_num"] is True
+    assert "fixed" not in st["legends"]
+    assert {r["color"] for r in entry["rows"]} == {"#000000"}
+    real_values = set(point_gdf["height"].dropna().astype(float))
+    row_values = {r["v"] for r in entry["rows"] if r["v"] is not None}
+    assert row_values == real_values
+
+
 def test_marker_layer_histogram_false_hides_marker_column_from_stats_panel(point_gdf):
     m = ff.marker_layer(
         point_gdf, layer_name="pts", column="height", marker_column="roof", histogram=False,

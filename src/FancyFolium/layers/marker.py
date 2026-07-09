@@ -72,6 +72,7 @@ def marker_layer(
     legend_unit: Optional[str] = None,
     active: bool = True,
     histogram: bool = True,
+    color_by_column: bool = True,
 ) -> folium.Map:
     """Add a point GeoDataFrame as colour- and/or icon-coded markers.
 
@@ -137,6 +138,12 @@ def marker_layer(
             can be generated for this layer on demand, and add a
             marker-values legend (when ``marker_column != column``). Set
             to ``False`` to have both ignore ``marker_column``.
+        color_by_column: Whether ``column`` (when given) drives per-marker
+            colour via ``cmap``. Set to ``False`` to keep every marker at
+            the uniform ``color`` while still attaching ``column``'s real
+            values to the layer, so the stats panel can histogram it (no
+            colour legend is auto-built in this case, since the map isn't
+            actually coloured by the column).
 
     Returns:
         The map, for chaining.
@@ -182,7 +189,7 @@ def marker_layer(
         compute_feature_colors(
             gdf[column] if column and column in gdf.columns else pd.Series([color] * len(gdf), index=gdf.index),
             cmap=cmap if column else None, vmin=vmin, vmax=vmax, categorical=categorical, count=count,
-        ) if column else {idx: color for idx in gdf.index}
+        ) if (column and color_by_column) else {idx: color for idx in gdf.index}
     )
 
     style_dict    = style or {}
@@ -296,7 +303,7 @@ def marker_layer(
 
     if legend:
         specs = []
-        if column and column in gdf.columns:
+        if column and column in gdf.columns and color_by_column:
             leg = _build_legend_spec(
                 layer_name=display_name, column=column, series=gdf[column],
                 cmap=cmap, vmin=vmin, vmax=vmax, categorical=categorical, count=count, unit=legend_unit,

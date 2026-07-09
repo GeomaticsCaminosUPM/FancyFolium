@@ -239,6 +239,7 @@ def vector_layer(
     legend: bool = True,
     legend_unit: str | None = None,
     active: bool = True,
+    color_by_column: bool = True,
 ) -> folium.Map
 ```
 
@@ -248,8 +249,8 @@ Add any polygon/line/point GeoDataFrame as a styled GeoJSON layer.
 |---|---|---|
 | `gdf` | - | Any geometry; auto-reprojected to EPSG:4326. |
 | `layer_name` | `column` | Required when `column` is `None`. |
-| `column` | `None` | Attribute used for colour mapping (numeric, categorical, or count). |
-| `color` | `"blue"` | Uniform fill colour when no column. |
+| `column` | `None` | Attribute used for colour mapping (numeric, categorical, or count) - and, if `color_by_column=False`, still exposed to the statistics panel even though it doesn't drive colour. |
+| `color` | `"blue"` | Uniform fill colour when no column, or when `color_by_column=False`. |
 | `cmap` | `None` | See [Colourmaps](#colourmaps-cmap). |
 | `vmin` / `vmax` | `None` | P10/P90 by default (0/max for count columns - see below). |
 | `categorical` | `False` | Force categorical treatment. Mutually exclusive with `count`. |
@@ -259,12 +260,19 @@ Add any polygon/line/point GeoDataFrame as a styled GeoJSON layer.
 | `style` | `None` | See [Style](#style). |
 | `legend` | `True` | Show a legend for this layer's `column`. |
 | `legend_unit` | `None` | Unit appended to numeric legend labels. |
+| `color_by_column` | `True` | Set `False` to keep every feature at the uniform `color` while `column` still feeds the statistics-panel histogram with its real values (no legend is auto-built in this case, since the map isn't actually coloured by it). |
 
 ```python
 m = ff.vector_layer(
     gdf, opacity=0.8, layer_name="footprints", column="height",
     cmap="Reds", vmin=0, vmax=50, overlay=True,
     popup=["height", "n_storeys"], legend_unit="m", m=m,
+)
+
+# Fixed colour, but the statistics panel still histograms `length` for real:
+m = ff.vector_layer(
+    arrows_gdf, layer_name="L1", column="length", color="black",
+    color_by_column=False, style={"stroke_color": "black"}, m=m,
 )
 ```
 
@@ -293,6 +301,7 @@ def marker_layer(
     legend_unit: str | None = None,
     active: bool = True,
     histogram: bool = True,
+    color_by_column: bool = True,
 ) -> folium.Map
 ```
 
@@ -303,6 +312,7 @@ Same as `vector_layer`, for point data, plus:
 | `marker` | Fixed text/emoji (`str`) for every row, or a `{category: symbol}` dict overriding specific `marker_column` values. `None` shows each row's raw `marker_column` value as-is. |
 | `marker_column` | Column whose value is shown inside each marker (always categorical). Pre-populate it with emojis for emoji markers - see `FancyFolium.emoji_for_categories`. |
 | `histogram` | If `column` (colormap) and `marker_column` are both given, expose `marker_column` to the map's **statistics panel** (bottom-left 📊 button) so its per-category breakdown - with icons, class labels, and **#/%** / **lin/log** toggle buttons - can be viewed for this layer on demand, and add a marker-values legend. Default `True`. |
+| `color_by_column` | Set `False` to keep every marker at the uniform `color` while `column` still feeds the statistics-panel histogram with its real values (no colour legend is auto-built in this case). Same idea as `vector_layer`'s `color_by_column`. |
 
 Markers with no `column`, `marker`, or `marker_column` render as a
 Google-Maps-style teardrop pin instead of a plain circle. When

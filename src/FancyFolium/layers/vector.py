@@ -71,6 +71,7 @@ def _build_style_function(
     count: bool,
     opacity: float,
     style: StyleArg,
+    color_by_column: bool = True,
 ) -> Tuple[Callable[[dict], dict], gpd.GeoDataFrame]:
     """Compute per-feature colours and build the GeoJson ``style_function``.
 
@@ -78,7 +79,8 @@ def _build_style_function(
         gdf: The layer's GeoDataFrame.
         column: Column to colour features by, or ``None`` for a uniform
             ``color``.
-        color: Uniform fill/stroke colour used when ``column`` is ``None``.
+        color: Uniform fill/stroke colour used when ``column`` is ``None``
+            or ``color_by_column`` is ``False``.
         cmap: Colour map argument (see
             :func:`FancyFolium.utils.color.resolve_cmap`).
         vmin: Lower colour-scale bound for numeric columns.
@@ -92,6 +94,12 @@ def _build_style_function(
             ``fill``/``fill_opacity``; or a plain string (reserved, stored
             as ``{"css": style}`` but currently unused by the style
             function).
+        color_by_column: Whether ``column`` (when given) drives per-feature
+            colour via ``cmap``. If ``False``, every feature uses the
+            uniform ``color`` instead, but ``column`` is still attached to
+            the GeoJSON output (and tracked by the caller for the stats
+            panel) - lets a layer keep a fixed colour while still exposing
+            a real column for its histogram.
 
     Returns:
         A tuple of the GeoJson ``style_function`` callable and a copy of
@@ -104,7 +112,7 @@ def _build_style_function(
     style_dict = style if isinstance(style, dict) else ({"css": style} if isinstance(style, str) else {}) if style else {}
     if column is not None and column not in gdf.columns:
         raise ValueError(f"Column '{column}' not found. Available: {list(gdf.columns)}")
-    if column is not None:
+    if column is not None and color_by_column:
         colors = compute_feature_colors(
             gdf[column], cmap=cmap, vmin=vmin, vmax=vmax, categorical=categorical, count=count,
         )
@@ -164,6 +172,7 @@ def vector_layer(
     legend: bool = True,
     legend_unit: Optional[str] = None,
     active: bool = True,
+    color_by_column: bool = True,
 ) -> folium.Map:
     """Add a polygon/line/point GeoDataFrame as a styled vector layer.
 
@@ -208,6 +217,12 @@ def vector_layer(
         legend: Whether to show a legend for this layer's ``column``.
         legend_unit: Unit string appended to numeric legend labels.
         active: Whether the layer starts visible.
+        color_by_column: Whether ``column`` (when given) drives per-feature
+            colour via ``cmap``. Set to ``False`` to keep every feature at
+            the uniform ``color`` while still attaching ``column``'s real
+            values to the layer, so the stats panel can histogram it (no
+            legend is auto-built in this case, since the map isn't
+            actually coloured by the column).
 
     Returns:
         The map, for chaining.
@@ -246,7 +261,10 @@ def vector_layer(
                 entry["active"] = False
 
     style_dict = style if isinstance(style, dict) else {}
-    style_fn, gdf = _build_style_function(gdf, column, color, cmap, vmin, vmax, categorical, count, opacity, style)
+    style_fn, gdf = _build_style_function(
+        gdf, column, color, cmap, vmin, vmax, categorical, count, opacity, style,
+        color_by_column=color_by_column,
+    )
 
     popup_result = _build_popup_tooltip(popup, lid, gdf)
     if len(popup_result) == 3:
@@ -287,14 +305,14 @@ def vector_layer(
     st["vector_layers"] = [l for l in st["vector_layers"] if l["name"] != display_name]
     st["vector_layers"].append(entry)
 
-    if legend and column is not None:
+    if legend and column is not None and color_by_column:
         leg = _build_legend_spec(
             layer_name=display_name, column=column, series=gdf[column],
             cmap=cmap, vmin=vmin, vmax=vmax, categorical=categorical, count=count, unit=legend_unit,
         )
         if leg:
             st["legends"][display_name] = [leg]
-    elif not legend:
+    else:
         st["legends"].pop(display_name, None)
 
     b = gdf_bounds_wgs84(gdf)
